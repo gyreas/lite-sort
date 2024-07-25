@@ -4,11 +4,12 @@ import sys, os
 from pathlib import Path
 
 
+DEFAULT_MAX_DEPTH = 4
 DEFAULT_CONFIG: dict = {
     # Read files to sort from this
     "file_list": None,
     # Maximum depth to search for files to sort
-    "max_depth": 4,
+    "max_depth": DEFAULT_MAX_DEPTH,
     # Start directory to start searching
     "start_dir": Path.cwd(),
     # Files to be sorted, will be merged with entries in `file_list`
@@ -34,7 +35,12 @@ def main(argv: list[str]) -> None:
     file_paths: list[Path] = []
 
     parse_args(argv, config)
-    collect_files(config["start_dir"], 0, config["max_depth"], file_paths)
+    collect_files(
+        start_dir=config["start_dir"],
+        current_depth=1,
+        max_depth=config["max_depth"],
+        file_paths=file_paths,
+    )
     sieve_files(config, file_paths, files_by_type)
 
     cwd = config["start_dir"]
@@ -46,10 +52,12 @@ def main(argv: list[str]) -> None:
                 pass
 
             for f in files:
-                os.rename(f, cwd / type / f.stem)
+                os.rename(f, cwd / type / f.parts[-1])
 
 
 def sieve_files(config: dict, file_paths: list[Path], files_by_type: dict) -> None:
+    # TODO: improve this with the file header especially for files without extension
+    # TODO: look into mimetypes
     for f in file_paths:
         if f.name in config["files"]:
             match get_ext(f):
@@ -96,13 +104,12 @@ def collect_files(start_dir: Path, current_depth: int, max_depth: int, file_path
         fp = root / f
         if fp.is_file():
             file_paths.append(fp)
-
     del files
 
     # deal with the subdirectories
     for dir in dirs:
         if not Path(dir).stem.startswith("."):
-            collect_files(Path(dir), current_depth + 1, max_depth, file_paths)
+            collect_files(root / dir, current_depth + 1, max_depth, file_paths)
     del dirs
 
 
@@ -218,6 +225,7 @@ test_argv = [
     "dir2/dir21/dir211/dir",
 ]
 
+# TODO: implement proper testing
 
 if __name__ == "__main__":
     argv = test_argv if test else sys.argv
