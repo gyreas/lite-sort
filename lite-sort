@@ -61,7 +61,7 @@ def sieve_files(config: dict, file_paths: list[Path], files_by_type: dict) -> No
     for f in file_paths:
         if f.name in config["files"]:
             match get_ext(f):
-                case ".xz" | ".tar" | ".zip" | ".zstd" | ".rar" | ".gz" | ".lzma":
+                case ".xz" | ".tar" | ".tar.gz" | ".zip" | ".zstd" | ".rar" | ".gz" | ".lzma":
                     files_by_type["archive"].append(f)
                 case ".mp3" | ".wav" | ".ogg" | ".m4a":
                     files_by_type["audio"].append(f)
@@ -130,6 +130,7 @@ With no files provided, sorts files starting from the current directory and its 
 
 
 def parse_args(argv: list[str], config: dict) -> None:
+    # TODO use `argparse`
     argc = len(argv)
 
     # regular operations
