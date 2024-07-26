@@ -1,11 +1,11 @@
 # lite-sort
 `lite-sort` is a simple program to collect and sort files in a given directory into directories
 matching (or relevant to) their filetype. Filetype is typically determined by the file's extension,
-but falls back to using file header to resolve files without extensions.
+but falls back to using file header to resolve files without extensions. Written with Python3+
 
 ## Examples
 ```console
-$ lite-sort file1.txt file2.pdf file3.zip
+$ python lite-sort file1.txt file2.pdf file3.zip
 ~/Documents
  \_ txt/
  \_ pdf/
@@ -25,4 +25,3 @@ With no files provided, sorts files starting from the current directory and its 
 -v, --version     output version information and exit
 -V, --verbose     verbose logging
 ```
-
