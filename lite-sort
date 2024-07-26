@@ -44,15 +44,16 @@ def main(argv: list[str]) -> None:
     sieve_files(config, file_paths, files_by_type)
 
     cwd = config["start_dir"]
+    print(str(cwd))
     for type, files in files_by_type.items():
         if len(files) > 0:
-            try:
-                (cwd / type).mkdir()
-            except FileExistsError:
-                pass
+            resolved_type_dir = cwd / type
+            if not resolved_type_dir.exists():
+                resolved_type_dir.mkdir()
 
             for f in files:
                 os.rename(f, cwd / type / f.parts[-1])
+            print("  \\_ %s" % type)
 
 
 def sieve_files(config: dict, file_paths: list[Path], files_by_type: dict) -> None:
