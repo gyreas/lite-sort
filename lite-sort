@@ -223,8 +223,8 @@ test_argv = [
     "file1.txt",
     "file2.pdf",
     "file3.zip",
-    "dir1/file4.xz",
-    "dir2/dir21/dir211/dir",
+    "dir1/d/d/d/d/d/d/d//file4.xz",
+    "dir2/dir21/dir211/dir2111/dir21111/not_a_dir",
 ]
 
 # TODO: implement proper testing
