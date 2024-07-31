@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-import sys, os
+import argparse, os, sys
 from pathlib import Path
 
+VERSION = "0.1"
+PROGNAME = "lite-sort"
 
 DEFAULT_MAX_DEPTH = 4
 DEFAULT_CONFIG: dict = {
@@ -35,6 +37,7 @@ def main(argv: list[str]) -> None:
     file_paths: list[Path] = []
 
     parse_args(argv, config)
+
     collect_files(
         start_dir=config["start_dir"],
         current_depth=1,
@@ -114,63 +117,63 @@ def collect_files(start_dir: Path, current_depth: int, max_depth: int, file_path
     del dirs
 
 
-def usage(arg0: str = "lite-sort") -> None:
-    usage = """\
-Usage: %s [options] [files]
-
-With no files provided, sorts files starting from the current directory and its subdirectories.
-
--d, --start-dir   start directory, where files to be sorted are searched
--D, --max-depth   maximum filesystem directory depth to search for files
--f, --file-list   file containing list of files to be sorted, files in this
-                  list will be merged with the [files] passed as arguments
--h, --help        display this help and exit
--v, --version     output version information and exit
-"""
-    print(usage % arg0, file=sys.stderr)
-
-
 def parse_args(argv: list[str], config: dict) -> None:
-    # TODO use `argparse`
-    argc = len(argv)
+    parser = argparse.ArgumentParser(
+        prog=PROGNAME,
+        description="",
+        epilog="",
+    )
+    parser.add_argument(
+        "files",
+        metavar="FILES",
+        help="With no files provided, sorts files starting from the current directory and its subdirectories.",
+        nargs="*",
+        type=str,
+    )
+    parser.add_argument(
+        "-d",
+        "--start-dir",
+        metavar="DIR",
+        help="start directory, where files to be sorted are searched",
+        type=str,
+    )
+    parser.add_argument(
+        "-D",
+        "--max-depth",
+        metavar="MAX_DEPTH",
+        help="maximum filesystem directory depth to search for files",
+        type=int,
+    )
+    parser.add_argument(
+        "-f",
+        "--file-list",
+        metavar="FILE",
+        help="file containing list of files to be sorted, files in this list will be merged\n\
+              with the [FILES] passed as arguments\n",
+        type=str,
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=PROGNAME + " " + VERSION,
+    )
 
-    # regular operations
-    i = 1
-    while i < argc:
-        arg = argv[i]
-
-        if arg == "-h" or arg == "--help":
-            usage(argv[0])
-            exit(0)
-        elif arg == "-f" or arg == "--file-list":
-            if i + 1 == argc:
-                print("lite-sort: --file-list: no file provided", file=sys.stderr)
-                usage(argv[0])
-                exit(1)
-            if argv[i + 1] == "-h" or argv[i + 1] == "--help":
-                usage(argv[0])
-                exit(1)
-            elif argv[i + 1] == "-D" or argv[i + 1] == "--max-depth":
-                usage(argv[0])
-                exit(1)
-
-            config["file_list"] = Path(argv[i + 1])
-
-            i += 1
-        elif arg == "-d" or arg == "--start-dir":
-            dir = Path(arg)
-            if dir.exists():
-                config["start_dir"] = dir.absolute()
-            else:
-                print("directory '%(dir)s' doesn't exist." % {"dir": str(dir)}, file=sys.stderr)
-        elif arg == "-D" or arg == "--max-depth":
-            pass
+    args = parser.parse_args(argv)
+    if args.file_list:
+        config["file_list"] = Path(args.file_list)
+    if args.max_depth:
+        config["max_depth"] = args.max_depth
+    if args.start_dir:
+        dir = Path(args.start_dir)
+        if dir.exists():
+            config["start_dir"] = dir.absolute()
         else:
-            # no other arguments supported, collect the rest as files to sort
-            config["files"].extend(argv[i:])
-            break
+            print("%s: error: directory '%s' doesn't exist." % (PROGNAME, str(dir)), file=sys.stderr)
+            exit(1)
 
-        i += 1
+    if len(args.files) > 0:
+        config["files"].extend(args.files)
 
     if config["file_list"]:
         merge_filelist(config)
@@ -234,6 +237,7 @@ if __name__ == "__main__":
 
     prep_test_args(test_argv[1:]) if test else None
 
-    main(argv)
+    # ignore the first argument
+    main(argv[1:])
 
     # clean_test_args(test_argv[1:]) if test else None
