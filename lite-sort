@@ -14,6 +14,7 @@ DEFAULT_CONFIG: dict = {
     "max_depth": DEFAULT_MAX_DEPTH,
     # Start directory to start searching
     "start_dir": Path.cwd(),
+    "dest_dir": Path.cwd(),
     # Files to be sorted, will be merged with entries in `file_list`
     "files": [],
 }
@@ -47,15 +48,16 @@ def main(argv: list[str]) -> None:
     sieve_files(config, file_paths, files_by_type)
 
     cwd = config["start_dir"]
-    print(str(cwd))
+    dest_dir = config["dest_dir"]
+    print(str(dest_dir))
     for type, files in files_by_type.items():
         if len(files) > 0:
-            resolved_type_dir = cwd / type
+            resolved_type_dir = dest_dir / type
             if not resolved_type_dir.exists():
                 resolved_type_dir.mkdir()
 
             for f in files:
-                os.rename(f, cwd / type / f.parts[-1])
+                os.rename(f, dest_dir / type / f.parts[-1])
             print("  \\_ %s" % type)
 
 
@@ -120,21 +122,28 @@ def collect_files(start_dir: Path, current_depth: int, max_depth: int, file_path
 def parse_args(argv: list[str], config: dict) -> None:
     parser = argparse.ArgumentParser(
         prog=PROGNAME,
-        description="",
+        description="Collect and sort files in a given directory into directories matching (or relevant to) their filetype.",
         epilog="",
     )
     parser.add_argument(
         "files",
         metavar="FILES",
-        help="With no files provided, sorts files starting from the current directory and its subdirectories.",
+        help="Files to sort. With no files provided, sorts files starting from the current directory and its subdirectories.",
         nargs="*",
         type=str,
     )
     parser.add_argument(
-        "-d",
+        "-s",
         "--start-dir",
-        metavar="DIR",
+        metavar="START_DIR",
         help="start directory, where files to be sorted are searched",
+        type=str,
+    )
+    parser.add_argument(
+        "-d",
+        "--dest-dir",
+        metavar="DEST_DIR",
+        help="destination directory, where files to be sorted are moved to",
         type=str,
     )
     parser.add_argument(
@@ -160,14 +169,24 @@ def parse_args(argv: list[str], config: dict) -> None:
     )
 
     args = parser.parse_args(argv)
+
     if args.file_list:
         config["file_list"] = Path(args.file_list)
+
     if args.max_depth:
         config["max_depth"] = args.max_depth
+
     if args.start_dir:
         dir = Path(args.start_dir)
         if dir.exists():
             config["start_dir"] = dir.absolute()
+        else:
+            print("%s: error: directory '%s' doesn't exist." % (PROGNAME, str(dir)), file=sys.stderr)
+            exit(1)
+    if args.dest_dir:
+        dir = Path(args.dest_dir)
+        if dir.exists():
+            config["dest_dir"] = dir.absolute()
         else:
             print("%s: error: directory '%s' doesn't exist." % (PROGNAME, str(dir)), file=sys.stderr)
             exit(1)
