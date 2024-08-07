@@ -2,6 +2,7 @@
 
 import argparse, os, sys
 from pathlib import Path
+from shutil import rmtree
 
 VERSION = "0.1"
 PROGNAME = "lite-sort"
@@ -42,7 +43,7 @@ def main(argv: list[str]) -> None:
     collect_files(
         start_dir=config["start_dir"],
         current_depth=1,
-        max_depth=config["max_depth"],
+        config=config,
         file_paths=file_paths,
     )
     sieve_files(config, file_paths, files_by_type)
@@ -57,45 +58,49 @@ def main(argv: list[str]) -> None:
                 resolved_type_dir.mkdir()
 
             for f in files:
-                os.rename(f, dest_dir / type / f.parts[-1])
-            print("  \\_ %s" % type)
+                dst = dest_dir / type / f.parts[-1]
+
+                if config["verbose"]:
+                    print("   %s -> %s" % (str(f), str(dst)))
+
+                os.rename(f, dst)
+
 
 
 def sieve_files(config: dict, file_paths: list[Path], files_by_type: dict) -> None:
     # TODO: improve this with the file header especially for files without extension
     # TODO: look into mimetypes
     for f in file_paths:
-        if f.name in config["files"]:
-            match get_ext(f):
-                case ".xz" | ".tar" | ".tar.gz" | ".zip" | ".zstd" | ".rar" | ".gz" | ".lzma":
-                    files_by_type["archive"].append(f)
-                case ".mp3" | ".wav" | ".ogg" | ".m4a":
-                    files_by_type["audio"].append(f)
-                case ".docx" | ".doc" | ".xls" | ".ppt" | ".pdf" | ".epub" | ".djvu" | ".mobi" | ".odt" | ".xlsx":
-                    files_by_type["document"].append(f)
-                case ".exe" | ".o" | ".so" | ".a":
-                    files_by_type["executable"].append(f)
-                case ".png" | ".svg" | ".jpg" | ".jpeg" | ".ppm" | ".xpm" | ".gif" | ".tiff" | ".raw":
-                    files_by_type["image"].append(f)
-                case ".iso" | ".data" | ".bin" | ".qcow" | ".qcow2" | ".vdi" | ".vmdk" | ".vhd" | ".hdd":
-                    files_by_type["raw_data"].append(f)
-                case ".mp4" | ".mkv" | ".mov" | ".avi" | ".3gp" | ".webm" | ".m4v":
-                    files_by_type["video"].append(f)
-                case _:
-                    files_by_type["text"].append(f)
+        match get_ext(f):
+            case ".xz" | ".tar" | ".tar.gz" | ".zip" | ".zstd" | ".rar" | ".gz" | ".lzma":
+                files_by_type["archive"].append(f)
+            case ".mp3" | ".wav" | ".ogg" | ".m4a":
+                files_by_type["audio"].append(f)
+            case ".docx" | ".doc" | ".xls" | ".ppt" | ".pdf" | ".epub" | ".djvu" | ".mobi" | ".odt" | ".xlsx":
+                files_by_type["document"].append(f)
+            case ".exe" | ".o" | ".so" | ".a":
+                files_by_type["executable"].append(f)
+            case ".png" | ".svg" | ".jpg" | ".jpeg" | ".ppm" | ".xpm" | ".gif" | ".tiff" | ".raw":
+                files_by_type["image"].append(f)
+            case ".iso" | ".data" | ".bin" | ".qcow" | ".qcow2" | ".vdi" | ".vmdk" | ".vhd" | ".hdd":
+                files_by_type["raw_data"].append(f)
+            case ".mp4" | ".mkv" | ".mov" | ".avi" | ".3gp" | ".webm" | ".m4v":
+                files_by_type["video"].append(f)
+            case _:
+                files_by_type["text"].append(f)
 
 
 def get_ext(path: Path) -> str:
     return "".join(path.suffixes)
 
 
-def collect_files(start_dir: Path, current_depth: int, max_depth: int, file_paths: list[Path]) -> None:
+def collect_files(start_dir: Path, current_depth: int, config: dict, file_paths: list[Path]) -> None:
     """
     Walk the path (which is a directory), and collect any files in it into `file_paths`.
     It enumerates `start_dir` on each call.
     """
 
-    if current_depth > max_depth:
+    if current_depth > config["max_depth"]:
         return
 
     # enumerate the current directory
@@ -109,13 +114,15 @@ def collect_files(start_dir: Path, current_depth: int, max_depth: int, file_path
     for f in files:
         fp = root / f
         if fp.is_file():
-            file_paths.append(fp)
+            if fp.name in config["files"]:
+                print("found: %s" % str(fp))
+                file_paths.append(fp)
     del files
 
     # deal with the subdirectories
     for dir in dirs:
         if not Path(dir).stem.startswith("."):
-            collect_files(root / dir, current_depth + 1, max_depth, file_paths)
+            collect_files(root / dir, current_depth + 1, config, file_paths)
     del dirs
 
 
@@ -207,19 +214,16 @@ def merge_filelist(config: dict) -> None:
 
 def prep_test_args(argv: list[str]) -> None:
     for f in argv:
-        p = Path(f)
+        p = Path(f).absolute()
         if not p.exists():
-            ps = f.split("/")
-            if len(ps) > 1:
-                maybe_f = Path(ps[-1])
-                dirs = Path("/".join(ps[:-1]))
-                dirs.mkdir(parents=True)
-                if maybe_f.is_dir():
-                    (dirs / maybe_f).mkdir()
-                else:
-                    (dirs / maybe_f).touch()
+            if p.is_dir():
+                p.mkdir(parents=True)
             else:
-                p.mkdir() if p.is_dir() else p.touch()
+                if not p.parent.exists():
+                    p.parent.mkdir(parents=True)
+                p.touch()
+        else:
+            p.mkdir(parents=True) if p.is_dir() else p.touch()
 
 
 def clean_test_args(argv: list[str]) -> None:
@@ -227,16 +231,13 @@ def clean_test_args(argv: list[str]) -> None:
     for f in argv:
         p = Path(f)
         if p.exists():
-            dirs = f.split("/")
-            if len(dirs) > 1:
-                if p.is_file():
-                    p.unlink()
-                    dirs.pop()
-                for i in range(0, len(dirs)):
-                    Path("/".join(dirs)).rmdir()
-                    dirs.pop()
+            if p.is_file():
+                p.unlink()
+                rmtree(p.parts[0])
             else:
-                p.rmdir() if p.is_dir() else p.unlink()
+                rmtree(p)
+
+    print("\nCleaned generated directories")
 
 
 test = False
