@@ -13,6 +13,7 @@ DEFAULT_CONFIG: dict = {
     "file_list": None,
     # Maximum depth to search for files to sort
     "max_depth": DEFAULT_MAX_DEPTH,
+    "verbose": False,
     # Start directory to start searching
     "start_dir": Path.cwd(),
     "dest_dir": Path.cwd(),
@@ -53,6 +54,9 @@ def main(argv: list[str]) -> None:
     print(str(dest_dir))
     for type, files in files_by_type.items():
         if len(files) > 0:
+            if config["verbose"]:
+                print("in %s" % type.upper())
+
             resolved_type_dir = dest_dir / type
             if not resolved_type_dir.exists():
                 resolved_type_dir.mkdir()
@@ -65,6 +69,7 @@ def main(argv: list[str]) -> None:
 
                 os.rename(f, dst)
 
+            print() if config["verbose"] else print("  \\_ %s" % type)
 
 
 def sieve_files(config: dict, file_paths: list[Path], files_by_type: dict) -> None:
@@ -169,10 +174,16 @@ def parse_args(argv: list[str], config: dict) -> None:
         type=str,
     )
     parser.add_argument(
-        "-v",
+        "-V",
         "--version",
         action="version",
         version=PROGNAME + " " + VERSION,
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="verbose output",
     )
 
     args = parser.parse_args(argv)
@@ -203,6 +214,8 @@ def parse_args(argv: list[str], config: dict) -> None:
 
     if config["file_list"]:
         merge_filelist(config)
+
+    config["verbose"] = args.verbose
 
 
 def merge_filelist(config: dict) -> None:
