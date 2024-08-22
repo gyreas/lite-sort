@@ -1,0 +1,4 @@
+- add support for specifying more than one search directories
+- support specifying custom folders for specified extensions or filetypes
+- improve the CLI
+- go GUI?
