@@ -17,6 +17,7 @@ Usage: lite-sort [options] [files]
 
 With no files provided, sorts files starting from the current directory and its subdirectories.
 
+OPTIONS:
 -s, --search-dir START_DIR  start directory, where files to be sorted are searched
 -d, --dest-dir DEST_DIR     destination directory, where files to be sorted are moved to
 -D, --max-depth DEPTH       maximum filesystem directory depth to search for files
