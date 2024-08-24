@@ -19,7 +19,6 @@ def setUp(argv: list[str]) -> None:
 
 
 def tearDown(argv: list[str]) -> None:
-    # TODO: Implement using os.walk()
     for f in argv:
         p = pathlib.Path(f)
         if p.exists():
@@ -57,8 +56,7 @@ class TestSetupAndDelete(unittest.TestCase):
         # make sure they don't exist
         for f in self.test_files:
             fp = pathlib.Path(f)
-            if fp.exists():
-                raise LiteSortError()
+            self.assertFalse(fp.exists(), "Cleaned up temp files shouldn't exist")
 
 
 if __name__ == "__main__":

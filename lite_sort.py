@@ -56,14 +56,14 @@ def main(argv: list[str]) -> None:
     for type, files in files_by_type.items():
         if len(files) > 0:
             if config["verbose"]:
-                print("in %s" % type.upper())
+                print("in %s" % file_type.upper())
 
-            resolved_type_dir = dest_dir / type
+            resolved_type_dir = dest_dir / file_type
             if not resolved_type_dir.exists():
                 resolved_type_dir.mkdir()
 
             for f in files:
-                dst = dest_dir / type / f.parts[-1]
+                dst = dest_dir / file_type / f.parts[-1]
 
                 if config["verbose"]:
                     print("   %s -> %s" % (str(f), str(dst)))
@@ -74,8 +74,10 @@ def main(argv: list[str]) -> None:
                 else:
                     copy2(f, dst, follow_symlinks=False)
 
-            print() if config["verbose"] else print("  \\_ %s" % type)
-
+            if config["verbose"]:
+                print()
+            else:
+                print("  \\_ %s" % file_type)
 
 def parse_args(argv: list[str], config: dict) -> None:
     parser = argparse.ArgumentParser(
