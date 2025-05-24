@@ -13,7 +13,7 @@ $ lite-sort file1.txt file2.pdf file3.zip
 ```
 
 ```
-Usage: litesort [options] [files]
+Usage: lite-sort [options] [files]
 
 With no files provided, sorts files starting from the current directory and its subdirectories.
 
