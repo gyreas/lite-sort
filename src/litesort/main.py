@@ -4,7 +4,7 @@ import argparse, os, sys
 from shutil import copy2, move
 from pathlib import Path
 
-import utils
+from . import utils
 
 VERSION = "0.1"
 PROGNAME = "lite-sort"
@@ -56,7 +56,7 @@ def main(argv: list[str]) -> None:
     cwd = config["search_dir"]
     dest_dir = config["dest_dir"]
     print(str(dest_dir))
-    for type, files in files_by_type.items():
+    for file_type, files in files_by_type.items():
         if len(files) > 0:
             if config["verbose"]:
                 print("in %s" % file_type.upper())

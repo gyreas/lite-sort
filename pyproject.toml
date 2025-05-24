@@ -24,7 +24,7 @@ dependencies = [
 Repository = "https://github.com/gyreas/lite-sort"
 
 [project.scripts]
-lite-sort = "lite_sort:run"
+lite-sort = "litesort:main.run"
 
 [tool.setuptools.packages.find]
 where = ["src"]
