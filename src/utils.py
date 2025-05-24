@@ -2,8 +2,6 @@ import argparse, os, sys
 from pathlib import Path
 from shutil import copy2, move, rmtree
 
-import utils
-
 def sieve_files(config: dict, file_paths: list[Path], files_by_type: dict) -> None:
     # TODO: improve this with the file header especially for files without extension
     # TODO: look into mimetypes
@@ -37,7 +35,7 @@ def collect_files(search_dir: Path, current_depth: int, config: dict, file_paths
         return
 
     # enumerate the current directory
-    next_ = next(utils.walk(search_dir, top_down=True, follow_symlinks=False, on_error=print))
+    next_ = next(walk(search_dir, top_down=True, follow_symlinks=False, on_error=print))
     if not next_:
         return
 

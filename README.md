@@ -5,7 +5,7 @@ but falls back to using file header to resolve files without extensions. Written
 
 ## Examples
 ```console
-$ python lite-sort file1.txt file2.pdf file3.zip
+$ lite-sort file1.txt file2.pdf file3.zip
 ~/Documents
  \_ txt/
  \_ pdf/
@@ -13,7 +13,7 @@ $ python lite-sort file1.txt file2.pdf file3.zip
 ```
 
 ```
-Usage: lite-sort [options] [files]
+Usage: litesort [options] [files]
 
 With no files provided, sorts files starting from the current directory and its subdirectories.
 

@@ -1,0 +1,30 @@
+[build-system]
+requires = [
+    "setuptools",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lite-sort"
+version = "0.1"
+maintainers = [ { name = "Saheed Adeleye", email = "aadesaed@gmail.com"} ]
+description = "Sort/group files by their file-type"
+readme = "README.md"
+license = "MPL-2.0"
+license-files = ["LICENSE"]
+keywords = ["file", "directory", "file_manipulation", "filesort", "mime"]
+classifiers = []
+requires-python = ">=3.13"
+dependencies = [
+    "pytest>=8.3.5",
+    "python-magic==0.4.27",
+]
+
+[project.urls]
+Repository = "https://github.com/gyreas/lite-sort"
+
+[project.scripts]
+lite-sort = "lite_sort:run"
+
+[tool.setuptools.packages.find]
+where = ["src"]

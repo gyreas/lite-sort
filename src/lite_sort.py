@@ -25,6 +25,9 @@ DEFAULT_CONFIG: dict = {
 }
 
 
+def run():
+    main(sys.argv[1:])
+
 def main(argv: list[str]) -> None:
     config = DEFAULT_CONFIG
     parse_args(argv, config)
@@ -168,11 +171,7 @@ def parse_args(argv: list[str], config: dict) -> None:
         config["files"].extend(args.files)
 
     if config["file_list"]:
-        merge_filelist(config)
+        utils.merge_filelist(config)
 
     config["move"] = args.move
     config["verbose"] = args.verbose
-
-
-if __name__ == "__main__":
-    main(sys.argv[1:])
