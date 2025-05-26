@@ -46,7 +46,8 @@ jobs:
           pipx install uv
           uv sync --active
           python -c "import sys; print(sys.version)"
-          uv publish --token "$TEST_PYPI_TOKEN" --publish-url "https://test.pypi.org/legacy" "build/$(python3 src/litesort/config.py v)/*.{whl,tar.gz}"
+          export OUTDIR="build/$(python3 src/litesort/config.py v)"
+          uv publish --token "$TEST_PYPI_TOKEN" --publish-url "https://test.pypi.org/legacy" $OUTDIR/*.whl $OUTDIR/*.tar.gz
         env:
           TEST_PYPI_TOKEN: "pypi-AgENdGVzdC5weXBpLm9yZwIkZmIxYjZmZjEtNWUxOC00Y2U0LTkzNGEtZTlkMzk1NjRmNzI4AAIqWzMsImFmMDI2NGVlLTkzZWItNDRjMC04YTM4LWQ5MTBlZWVjMWI3ZCJdAAAGIMnTHx___lZSrm24Hey4ioIQeNFqFaO1oxH5z0i6lv-8"
 
