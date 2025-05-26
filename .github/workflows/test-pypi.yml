@@ -1,9 +1,9 @@
 name: lite-sort
 
 on:
-  # push:
-  #   branch:
-  #     - main
+  push:
+    branches:
+      - pypi-ci
   workflow_dispatch:
 
 env:
