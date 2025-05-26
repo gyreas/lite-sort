@@ -26,11 +26,13 @@ jobs:
 
       # You can test your matrix by printing the current Python version
       - name: Display Python version
-        run: python -c "import sys; print(sys.version)"
+        run: |
+          python -c "import sys; print(sys.version)"
+          pipx version
 
       - name: Install dependencies
         run: |
-          sudo apt install uv
+          pipx install uv
           mkdir ~/bin; curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/bin
           echo "PWD=" $PWD; ls -hl; tree;
           ~/bin/just build-whl {{TEST_PYPI_TOKEN}}
