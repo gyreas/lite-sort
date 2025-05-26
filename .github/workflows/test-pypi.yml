@@ -30,9 +30,9 @@ jobs:
           pipx install uv
           uv sync --active
       - name: Build wheel
-        run: uv build --wheel
+        run: uv build --wheel --out-dir "build/$(python3 src/litesort/config.py v)"
       - name: Build sdist
-        run: uv build --sdist
+        run: uv build --sdist --out-dir "build/$(python3 src/litesort/config.py v)"
 
   publish:
     runs-on: ubuntu-latest
@@ -46,7 +46,7 @@ jobs:
           pipx install uv
           uv sync --active
           python -c "import sys; print(sys.version)"
-          uv publish --token "$TEST_PYPI_TOKEN" --publish-url "https://test.pypi.org/legacy"
+          uv publish --token "$TEST_PYPI_TOKEN" --publish-url "https://test.pypi.org/legacy" "build/$(python3 src/litesort/config.py v)/*.{whl,tar.gz}"
         env:
           TEST_PYPI_TOKEN: "pypi-AgENdGVzdC5weXBpLm9yZwIkZmIxYjZmZjEtNWUxOC00Y2U0LTkzNGEtZTlkMzk1NjRmNzI4AAIqWzMsImFmMDI2NGVlLTkzZWItNDRjMC04YTM4LWQ5MTBlZWVjMWI3ZCJdAAAGIMnTHx___lZSrm24Hey4ioIQeNFqFaO1oxH5z0i6lv-8"
 
