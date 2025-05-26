@@ -35,6 +35,7 @@ jobs:
         run: uv build --sdist --out-dir "build/$(python3 src/litesort/config.py v)"
 
   publish:
+    needs: [build]
     runs-on: ubuntu-latest
     strategy:
       matrix:
