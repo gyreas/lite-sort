@@ -66,6 +66,7 @@ def get_ext(path: Path) -> str:
     return "".join(path.suffixes)
 
 # Lifted from Python's Lib/_abc.py
+# TODO: simplify this, e.g remove top_down
 def walk(root, top_down=True, on_error=None, follow_symlinks=False):
     """
     Walk the directory tree from this directory, similar to os.walk().

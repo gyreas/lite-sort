@@ -5,9 +5,7 @@ from shutil import copy2, move
 from pathlib import Path
 
 from . import utils
-
-VERSION = "0.1"
-PROGNAME = "lite-sort"
+from .config import VERSION, PROGNAME
 
 DEFAULT_MAX_DEPTH = 4
 DEFAULT_CONFIG: dict = {
