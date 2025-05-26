@@ -6,9 +6,6 @@ on:
       - pypi-ci
   workflow_dispatch:
 
-env:
-  TEST_PYPI_TOKEN: "pypi-AgENdGVzdC5weXBpLm9yZwIkZmIxYjZmZjEtNWUxOC00Y2U0LTkzNGEtZTlkMzk1NjRmNzI4AAIqWzMsImFmMDI2NGVlLTkzZWItNDRjMC04YTM4LWQ5MTBlZWVjMWI3ZCJdAAAGIMnTHx___lZSrm24Hey4ioIQeNFqFaO1oxH5z0i6lv-8"
-
 jobs:
   build:
 
@@ -31,5 +28,23 @@ jobs:
       - name: Install dependencies
         run: |
           pipx install uv
-          mkdir ~/bin; curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/bin
-          ~/bin/just publish-test
+          uv sync --active
+      - name: Build wheel
+        run: uv build --wheel
+      - name: Build sdist
+        run: uv build --sdist
+
+  publish:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish to TestPyPI
+        run: |
+          python -c "import sys; print(sys.version)"
+          uv publish --token "$TEST_PYPI_TOKEN" --publish-url "https://test.pypi.org/legacy"
+        env:
+          TEST_PYPI_TOKEN: "pypi-AgENdGVzdC5weXBpLm9yZwIkZmIxYjZmZjEtNWUxOC00Y2U0LTkzNGEtZTlkMzk1NjRmNzI4AAIqWzMsImFmMDI2NGVlLTkzZWItNDRjMC04YTM4LWQ5MTBlZWVjMWI3ZCJdAAAGIMnTHx___lZSrm24Hey4ioIQeNFqFaO1oxH5z0i6lv-8"
+
