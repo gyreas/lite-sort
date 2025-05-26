@@ -15,11 +15,11 @@ build-whl:
 	uv build --wheel --out-dir {{outdir}}
 
 publish: build-all
-	uv publish --token "$UP_TOKEN" --publish-url {{pypi}} {{outdir}}/*.[whl,tar.gz]
+	uv publish --token "$PYPI_TOKEN" --publish-url {{pypi}} {{outdir}}/*.[whl,tar.gz]
 
 publish-test: build-all
 	#!/bin/sh
-	uv publish --token "$UP_TOKEN" --publish-url {{tpypi}} {{outdir}}/*.whl {{outdir}}/*.tar.gz
+	uv publish --token "$TEST_PYPI_TOKEN" --publish-url {{tpypi}} {{outdir}}/*.whl {{outdir}}/*.tar.gz
 
 clean:
 	rm -rf {{builddir}}/*
