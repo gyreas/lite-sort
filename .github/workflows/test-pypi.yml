@@ -43,6 +43,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Publish to TestPyPI
         run: |
+          pipx install uv
+          uv sync --active
           python -c "import sys; print(sys.version)"
           uv publish --token "$TEST_PYPI_TOKEN" --publish-url "https://test.pypi.org/legacy"
         env:
