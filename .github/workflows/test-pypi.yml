@@ -33,4 +33,4 @@ jobs:
           pipx install uv
           mkdir ~/bin; curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/bin
           echo "PWD=" $PWD; ls -hl; tree;
-          ~/bin/just build-whl "$TEST_PYPI_TOKEN"
+          ~/bin/just build-whl
