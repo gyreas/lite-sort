@@ -93,6 +93,7 @@ jobs:
       - name: Publish to TestPyPI using ${{ matrix.python-version }}
         run: |
           tree
+          echo $TEST_PYPI_TOKEN
           uv publish --token "$TEST_PYPI_TOKEN" --publish-url "https://test.pypi.org/legacy" dist/*.whl dist/*.tar.gz
         env:
           TEST_PYPI_TOKEN: "pypi-AgENdGVzdC5weXBpLm9yZwIkZmIxYjZmZjEtNWUxOC00Y2U0LTkzNGEtZTlkMzk1NjRmNzI4AAIqWzMsImFmMDI2NGVlLTkzZWItNDRjMC04YTM4LWQ5MTBlZWVjMWI3ZCJdAAAGIMnTHx___lZSrm24Hey4ioIQeNFqFaO1oxH5z0i6lv-8"
