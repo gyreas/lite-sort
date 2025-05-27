@@ -32,16 +32,34 @@ jobs:
         run: |
           pipx install uv
           uv sync --active
+          
       - name: Build wheel
-        run: uv build --wheel --out-dir "build/$(python3 src/litesort/config.py v)"
-        
-      - name: Build sdist
-        run: uv build --sdist --out-dir "build/$(python3 src/litesort/config.py v)"
-      - name: Upload artifact for ${{ env.LATEST_PYVER }}
+        run: uv build --wheel
+      - name: Upload wheel for ${{ env.LATEST_PYVER }}
         if: ${{ matrix.python-version == env.LATEST_PYVER }}
         run: |
           tree
           python -c 'import sys; print(sys.version)'
+      - name: Really upload wheel for ${{ env.LATEST_PYVER }}
+        if: ${{ matrix.python-version == env.LATEST_PYVER }}
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: lite-sort.whl
+          path: dist/*.whl        
+          
+      - name: Build sdist
+        run: uv build --sdist
+      - name: Upload sdist for ${{ env.LATEST_PYVER }}
+        if: ${{ matrix.python-version == env.LATEST_PYVER }}
+        run: |
+          tree
+          python -c 'import sys; print(sys.version)'
+      - name: Really upload sdist for ${{ env.LATEST_PYVER }}
+        if: ${{ matrix.python-version == env.LATEST_PYVER }}
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: lite-sort.tar.gz
+          path: dist/*.tar.gz
 
   publish:
     needs: [build]
