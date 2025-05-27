@@ -43,7 +43,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python ${{ matrix.python-version }}
-      - uses: actions/setup-python@v5
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Sync environment for publishing
@@ -51,6 +51,7 @@ jobs:
           pipx install uv
           uv sync --active
           python -c "import sys; print(sys.version)"
+          
       - uses: actions/download-artifact@v4.3.0
       - name: Download the built wheel artifact
         with:
