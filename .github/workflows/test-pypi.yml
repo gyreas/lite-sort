@@ -6,13 +6,16 @@ on:
       - pypi-ci
   workflow_dispatch:
 
+env:
+  LATEST_PYVER: "3.13"
+  
 jobs:
   build:
 
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["pypy3.10", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["pypy3.10", "3.9", "3.10", "3.11", "3.12", env.LATEST_PYVER]
 
     steps:
       - uses: actions/checkout@v4
@@ -31,8 +34,14 @@ jobs:
           uv sync --active
       - name: Build wheel
         run: uv build --wheel --out-dir "build/$(python3 src/litesort/config.py v)"
+        
       - name: Build sdist
         run: uv build --sdist --out-dir "build/$(python3 src/litesort/config.py v)"
+      - name: Upload artifact for ${{ env.LATEST_PYVER }}
+        if: ${{ matrix.python-version == env.LATEST_PYVER }}
+        run: |
+          tree
+          python -c 'import sys; print(sys.version)'
 
   publish:
     needs: [build]
