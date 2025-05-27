@@ -52,16 +52,17 @@ jobs:
           uv sync --active
           python -c "import sys; print(sys.version)"
           
-      - uses: actions/download-artifact@v4.3.0
       - name: Download the built wheel artifact
+        uses: actions/download-artifact@v4.3.0
         with:
           name: lite-sort.whl
           path: dist/
-      - uses: actions/download-artifact@v4.3.0
       - name: Download the source dist artifact
+        uses: actions/download-artifact@v4.3.0
         with:
           name: lite-sort.tar.gz
           path: dist/
+          
       - name: Publish to TestPyPI using ${{ matrix.python-version }}
         run: |
           tree
