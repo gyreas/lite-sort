@@ -24,10 +24,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # You can test your matrix by printing the current Python version
-      - name: Display Python version
-        run: python -c "import sys; print(sys.version)"
-
       - name: Install dependencies
         run: |
           pipx install uv
@@ -37,29 +33,23 @@ jobs:
         run: uv build --wheel
       - name: Upload wheel for ${{ env.LATEST_PYVER }}
         if: ${{ matrix.python-version == env.LATEST_PYVER }}
-        run: |
-          tree
-          python -c 'import sys; print(sys.version)'
-      - name: Really upload wheel for ${{ env.LATEST_PYVER }}
-        if: ${{ matrix.python-version == env.LATEST_PYVER }}
         uses: actions/upload-artifact@v4.6.2
         with:
           name: lite-sort.whl
-          path: dist/*.whl        
+          path: dist/*.whl
+          retention-days: 1
+          overwrite: true        
           
       - name: Build sdist
         run: uv build --sdist
       - name: Upload sdist for ${{ env.LATEST_PYVER }}
         if: ${{ matrix.python-version == env.LATEST_PYVER }}
-        run: |
-          tree
-          python -c 'import sys; print(sys.version)'
-      - name: Really upload sdist for ${{ env.LATEST_PYVER }}
-        if: ${{ matrix.python-version == env.LATEST_PYVER }}
         uses: actions/upload-artifact@v4.6.2
         with:
           name: lite-sort.tar.gz
           path: dist/*.tar.gz
+          retention-days: 1
+          overwrite: true
 
   publish:
     needs: [build]
