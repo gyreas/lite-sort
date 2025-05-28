@@ -1,0 +1,80 @@
+name: PyPI
+
+on:
+  workflow_dispatch:
+
+env:
+  LATEST_PYVER: "3.13"
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "pypy3.10", "3.9", "3.10", "3.11", "3.12", "3.13" ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pipx install uv
+          uv sync --active
+          
+      - name: Build wheel
+        run: uv build --wheel
+      - name: Upload wheel for ${{ env.LATEST_PYVER }}
+        if: ${{ matrix.python-version == env.LATEST_PYVER }}
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: lite-sort.whl
+          path: dist/*.whl
+          retention-days: 1
+          overwrite: true        
+          
+      - name: Build sdist
+        run: uv build --sdist
+      - name: Upload sdist for ${{ env.LATEST_PYVER }}
+        if: ${{ matrix.python-version == env.LATEST_PYVER }}
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: lite-sort.tar.gz
+          path: dist/*.tar.gz
+          overwrite: true
+
+  publish:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python ${{ env.LATEST_PYVER }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.LATEST_PYVER }}
+          
+      - name: Sync environment for publishing
+        run: |
+          python -c "import sys; print(sys.version)"
+          pipx install uv
+          uv sync --active
+          
+      - name: Download the built wheel artifact
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: lite-sort.whl
+          path: dist/
+          
+      - name: Download the source dist artifact
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: lite-sort.tar.gz
+          path: dist/
+          
+      - name: Publish to PyPI using ${{ env.LATEST_PYVER }}
+        run: |
+          uv publish --token "${{ secrets.PYPI_TOKEN }}" --index pypi dist/*
