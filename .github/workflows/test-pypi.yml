@@ -87,5 +87,4 @@ jobs:
           uv publish --token "$TEST_PYPI_TOKEN" --index testpypi dist/*.tar.gz
           uv publish --token "$TEST_PYPI_TOKEN" --index testpypi dist/*.whl
         env:
-          TEST_PYPI_TOKEN: "pypi-AgENdGVzdC5weXBpLm9yZwIkZmIxYjZmZjEtNWUxOC00Y2U0LTkzNGEtZTlkMzk1NjRmNzI4AAIqWzMsImFmMDI2NGVlLTkzZWItNDRjMC04YTM4LWQ5MTBlZWVjMWI3ZCJdAAAGIMnTHx___lZSrm24Hey4ioIQeNFqFaO1oxH5z0i6lv-8"
-
+          TEST_PYPI_TOKEN: ${{ secrets.TEST_PYPI_TOKEN }}
