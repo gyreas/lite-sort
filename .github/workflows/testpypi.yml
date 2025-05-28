@@ -1,6 +1,9 @@
 name: TestPyPI
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 env:
@@ -75,6 +78,6 @@ jobs:
           name: lite-sort.tar.gz
           path: dist/
           
-      - name: Publish to PyPI using ${{ env.LATEST_PYVER }}
+      - name: Publish to TestPyPI using ${{ env.LATEST_PYVER }}
         run: |
-          uv publish --token "${{ secrets.PYPI_TOKEN }}" --index pypi dist/*
+          uv publish --token "${{ secrets.TEST_PYPI_TOKEN }}" --index testpypi dist/*
