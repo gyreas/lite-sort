@@ -35,7 +35,7 @@ def collect_files(search_dir: Path, current_depth: int, config: dict, file_paths
         return
 
     # enumerate the current directory
-    next_ = next(walk(search_dir, top_down=True, follow_symlinks=False, on_error=print))
+    next_ = next(walk(search_dir, follow_symlinks=False, on_error=print))
     if not next_:
         return
 
@@ -65,8 +65,7 @@ def merge_filelist(config: dict) -> None:
 def get_ext(path: Path) -> str:
     return "".join(path.suffixes)
 
-# Lifted from Python's Lib/_abc.py
-def walk(root, top_down=True, on_error=None, follow_symlinks=False):
+def walk(root, on_error=None, follow_symlinks=False):
     """
     Walk the directory tree from this directory, similar to os.walk().
     """
@@ -78,15 +77,11 @@ def walk(root, top_down=True, on_error=None, follow_symlinks=False):
             continue
         dirnames = []
         filenames = []
-        if not top_down:
-            paths.append((path, dirnames, filenames))
         try:
             for child in path.iterdir():
                 try:
                     # if child.is_dir(follow_symlinks=follow_symlinks):
                     if child.is_dir():
-                        if not top_down:
-                            paths.append(child)
                         dirnames.append(child.name)
                     else:
                         filenames.append(child.name)
@@ -95,10 +90,7 @@ def walk(root, top_down=True, on_error=None, follow_symlinks=False):
         except OSError as error:
             if on_error is not None:
                 on_error(error)
-            if not top_down:
-                while not isinstance(paths.pop(), tuple):
-                    pass
             continue
-        if top_down:
-            yield path, dirnames, filenames
-            paths += [path.joinpath(d) for d in reversed(dirnames)]
+
+        yield path, dirnames, filenames
+        paths += [path.joinpath(d) for d in reversed(dirnames)]
