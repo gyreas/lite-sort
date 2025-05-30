@@ -54,8 +54,12 @@ def main(argv: list[str]) -> None:
     utils.sieve_files(config, file_paths, files_by_type)
 
     cwd = config["search_dir"]
+    print(config["dest_dir"])
+    lsort(files_by_type, config)
+
+def lsort(files_by_type: dict, config: dict):
     dest_dir = config["dest_dir"]
-    print(str(dest_dir))
+
     for file_type, files in files_by_type.items():
         if len(files) > 0:
             if config["verbose"]:
@@ -144,7 +148,6 @@ def parse_args(argv: list[str], config: dict) -> None:
     )
 
     args = parser.parse_args(argv)
-    print(args)
 
     if args.file_list:
         config["file_list"] = Path(args.file_list)
