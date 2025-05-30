@@ -2,7 +2,7 @@ import unittest
 import pathlib
 
 from shutil import rmtree
-import utils
+from litesort import utils
 
 def setUp(argv: list[str]) -> None:
     for f in argv:
