@@ -6,7 +6,7 @@ from pathlib import Path
 
 from . import utils
 
-VERSION = "0.1"
+VERSION = "0.1.1"
 PROGNAME = "lite-sort"
 
 DEFAULT_MAX_DEPTH = 4
