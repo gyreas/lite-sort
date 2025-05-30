@@ -179,8 +179,12 @@ def parse_args(argv: list[str], config: dict) -> None:
             )
             exit(1)
 
-    if len(args.files) > 0:
-        config["files"].extend(args.files)
+    if len(args.files) == 0:
+        print("%s: doing nothing since no files were specified.\n" % PROGNAME)
+        parser.print_help()
+        exit(0)
+
+    config["files"].extend(args.files)
 
     if config["file_list"]:
         utils.merge_filelist(config)
