@@ -16,7 +16,7 @@ DEFAULT_CONFIG: dict = {
     # Maximum depth to search for files to sort
     "max_depth": DEFAULT_MAX_DEPTH,
     "move": False,
-    "verbose": False,
+    "verbose": True,
     # Search directory to find files to sort
     "search_dir": Path.cwd(),
     "dest_dir": Path.cwd(),
@@ -27,6 +27,7 @@ DEFAULT_CONFIG: dict = {
 
 def run():
     main(sys.argv[1:])
+
 
 def main(argv: list[str]) -> None:
     config = DEFAULT_CONFIG
@@ -57,6 +58,7 @@ def main(argv: list[str]) -> None:
     print(config["dest_dir"])
     lsort(files_by_type, config)
 
+
 def lsort(files_by_type: dict, config: dict):
     dest_dir = config["dest_dir"]
 
@@ -85,6 +87,7 @@ def lsort(files_by_type: dict, config: dict):
                 print()
             else:
                 print("  \\_ %s" % file_type)
+
 
 def parse_args(argv: list[str], config: dict) -> None:
     parser = argparse.ArgumentParser(
@@ -135,16 +138,16 @@ def parse_args(argv: list[str], config: dict) -> None:
         action="store_true",
     )
     parser.add_argument(
-        "-V",
-        "--version",
-        action="version",
-        version="%s %s" % (PROGNAME, VERSION),
+        "-q",
+        "--quiet",
+        action="store_false",
+        help="no verbose output",
     )
     parser.add_argument(
         "-v",
-        "--verbose",
-        action="store_true",
-        help="verbose output",
+        "--version",
+        action="version",
+        version="%s %s" % (PROGNAME, VERSION),
     )
 
     args = parser.parse_args(argv)
@@ -160,14 +163,20 @@ def parse_args(argv: list[str], config: dict) -> None:
         if dir.exists():
             config["search_dir"] = dir.absolute()
         else:
-            print("%s: error: directory '%s' doesn't exist." % (PROGNAME, str(dir)), file=sys.stderr)
+            print(
+                "%s: error: directory '%s' doesn't exist." % (PROGNAME, str(dir)),
+                file=sys.stderr,
+            )
             exit(1)
     if args.dest_dir:
         dir = Path(args.dest_dir)
         if dir.exists():
             config["dest_dir"] = dir.absolute()
         else:
-            print("%s: error: directory '%s' doesn't exist." % (PROGNAME, str(dir)), file=sys.stderr)
+            print(
+                "%s: error: directory '%s' doesn't exist." % (PROGNAME, str(dir)),
+                file=sys.stderr,
+            )
             exit(1)
 
     if len(args.files) > 0:
@@ -177,4 +186,4 @@ def parse_args(argv: list[str], config: dict) -> None:
         utils.merge_filelist(config)
 
     config["move"] = args.move
-    config["verbose"] = args.verbose
+    config["verbose"] = not args.quiet
