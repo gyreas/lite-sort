@@ -2,28 +2,36 @@ import argparse, os, sys
 from pathlib import Path
 from shutil import copy2, move, rmtree
 
-def sieve_files(config: dict, file_paths: list[Path], files_by_type: dict) -> None:
+from .filetype import FileType
+
+def sieve_files(config: dict, file_paths: list[Path], files_by_type: dict[FileType, list[Path]]) -> None:
     # TODO: improve this with the file header especially for files without extension
     # TODO: look into mimetypes
     for f in file_paths:
+        ft = categorise_by_filetype(f)
+        assert ft != FileType.UNKNOWN, "This is a bug"
+        files_by_type[ft].append(f)
+
+def categorise_by_filetype(f: Path) -> FileType:
+        ft = FileType.UNKNOWN
         match get_ext(f):
             case ".xz" | ".tar" | ".tar.gz" | ".zip" | ".zstd" | ".rar" | ".gz" | ".lzma":
-                files_by_type["archive"].append(f)
+                ft = FileType.ARCHIVE
             case ".mp3" | ".wav" | ".ogg" | ".m4a":
-                files_by_type["audio"].append(f)
+                ft = FileType.AUDIO
             case ".docx" | ".doc" | ".xls" | ".ppt" | ".pdf" | ".epub" | ".djvu" | ".mobi" | ".odt" | ".xlsx":
-                files_by_type["document"].append(f)
+                ft = FileType.DOCUMENT
             case ".exe" | ".o" | ".so" | ".a":
-                files_by_type["executable"].append(f)
+                ft = FileType.EXECUTABLE
             case ".png" | ".svg" | ".jpg" | ".jpeg" | ".ppm" | ".xpm" | ".gif" | ".tiff" | ".raw":
-                files_by_type["image"].append(f)
+                ft = FileType.IMAGE
             case ".iso" | ".data" | ".bin" | ".qcow" | ".qcow2" | ".vdi" | ".vmdk" | ".vhd" | ".hdd":
-                files_by_type["raw_data"].append(f)
+                ft = FileType.RAW_DATA
             case ".mp4" | ".mkv" | ".mov" | ".avi" | ".3gp" | ".webm" | ".m4v":
-                files_by_type["video"].append(f)
+                ft = FileType.VIDEO
             case _:
-                files_by_type["text"].append(f)
-
+                ft = FileType.TEXT
+        return ft
 
 def collect_files(search_dir: Path, current_depth: int, config: dict, file_paths: list[Path]) -> None:
     """

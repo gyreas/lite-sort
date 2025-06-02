@@ -5,6 +5,7 @@ from shutil import copy2, move
 from pathlib import Path
 
 from . import utils
+from .filetype import FileType as FT
 
 VERSION = "0.1.1"
 PROGNAME = "lite-sort"
@@ -33,15 +34,15 @@ def main(argv: list[str]) -> None:
     config = DEFAULT_CONFIG
     parse_args(argv, config)
 
-    files_by_type: dict = {
-        "archive": [],
-        "audio": [],
-        "document": [],
-        "executable": [],
-        "image": [],
-        "raw_data": [],
-        "video": [],
-        "text": [],
+    files_by_type: dict[FT, list[Path]] = {
+        FT.ARCHIVE:    [],
+        FT.AUDIO:      [],
+        FT.DOCUMENT:   [],
+        FT.EXECUTABLE: [],
+        FT.IMAGE:      [],
+        FT.RAW_DATA:   [],
+        FT.TEXT:       [],
+        FT.VIDEO:      [],
     }
     # This will contain all collected files
     file_paths: list[Path] = []
@@ -59,13 +60,14 @@ def main(argv: list[str]) -> None:
     lsort(files_by_type, config)
 
 
-def lsort(files_by_type: dict, config: dict):
+def lsort(files_by_type: dict[FT, list[Path]], config: dict):
     dest_dir = config["dest_dir"]
 
-    for file_type, files in files_by_type.items():
+    for ft, files in files_by_type.items():
+        file_type = str(ft)
         if len(files) > 0:
             if config["verbose"]:
-                print("in %s" % file_type.upper())
+                print("in %s" % file_type)
 
             resolved_type_dir = dest_dir / file_type
             if not resolved_type_dir.exists():
