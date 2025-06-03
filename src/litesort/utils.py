@@ -4,7 +4,11 @@ from shutil import copy2, move, rmtree
 
 from .filetype import FileType
 
-def sieve_files(config: dict, file_paths: list[Path], files_by_type: dict[FileType, list[Path]]) -> None:
+def categorise_files(
+    config: dict,
+    file_paths: list[Path],
+    files_by_type: dict[FileType, list[Path]]
+) -> None:
     # TODO: improve this with the file header especially for files without extension
     # TODO: look into mimetypes
     for f in file_paths:
@@ -33,7 +37,12 @@ def categorise_by_filetype(f: Path) -> FileType:
                 ft = FileType.TEXT
         return ft
 
-def collect_files(search_dir: Path, current_depth: int, config: dict, file_paths: list[Path]) -> None:
+def collect_files(
+    search_dir: Path,
+    current_depth: int,
+    config: dict,
+    file_paths: list[Path]
+) -> None:
     """
     Walk the path (which is a directory), and collect any files in it into `file_paths`.
     It enumerates `search_dir` on each call.
@@ -65,7 +74,9 @@ def collect_files(search_dir: Path, current_depth: int, config: dict, file_paths
     del dirs
 
 def merge_filelist(config: dict) -> None:
-    """Assumes files are in the current directory or its children."""
+    """
+    Assumes files are in the current directory or its children.
+    """
     with open(config["file_list"], "r") as file_list:
         files_from_list = list(map(lambda line: line.strip(), file_list.readlines()))
         config["files"].extend(files_from_list)

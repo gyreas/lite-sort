@@ -53,7 +53,7 @@ def main(argv: list[str]) -> None:
         config=config,
         file_paths=file_paths,
     )
-    utils.sieve_files(config, file_paths, files_by_type)
+    utils.categorise_files(config, file_paths, files_by_type)
 
     cwd = config["search_dir"]
     print(config["dest_dir"])
