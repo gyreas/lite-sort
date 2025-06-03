@@ -4,6 +4,8 @@ import pathlib
 from shutil import rmtree
 from litesort import utils
 
+TESTDIR = pathlib.Path(".testdir/").absolute()
+
 def setUp(argv: list[str]) -> None:
     for f in argv:
         p = pathlib.Path(f).absolute()
@@ -60,4 +62,6 @@ class TestSetupAndDelete(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    TESTDIR.mkdir(parents=True)
     unittest.main()
+    TESTDIR.rmdir()
