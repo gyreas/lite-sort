@@ -1,11 +1,13 @@
 import argparse, os, sys
 from pathlib import Path
 from shutil import copy2, move, rmtree
+from typing import List, Set, Tuple, Union
 
 from .filetype import FileType
+from .config import Config
 
 def categorise_files(
-    config: dict,
+    config: Config,
     file_paths: list[Path],
     files_by_type: dict[FileType, list[Path]]
 ) -> None:
@@ -40,7 +42,7 @@ def categorise_by_filetype(f: Path) -> FileType:
 def collect_files(
     search_dir: Path,
     current_depth: int,
-    config: dict,
+    config: Config,
     file_paths: list[Path]
 ) -> None:
     """
@@ -48,7 +50,7 @@ def collect_files(
     It enumerates `search_dir` on each call.
     """
 
-    if current_depth > config["max_depth"]:
+    if current_depth > config.max_depth:
         return
 
     # enumerate the current directory
@@ -58,28 +60,37 @@ def collect_files(
 
     root, dirs, files = next_
 
+    # combine the matched filepaths with the globs to make it holistic
+    fileset: Set[Path] = set(config.files)
+    for g in config.globs:
+        globs = list(Path(root).glob(g))
+        fileset.update(globs)
+        del globs
+
     # collect the (toplevel) regular files here
     for f in files:
         fp = root / f
-        if fp.is_file():
-            if fp.name in config["files"]:
-                print("found: %s" % str(fp))
-                file_paths.append(fp)
+        assert fp.is_file(), "This is a bug"
+        if fp in fileset:
+            print("found: %s" % str(fp))
+            file_paths.append(fp)
+
     del files
+    del fileset
 
     # deal with the subdirectories
     for dir in dirs:
-        if not Path(dir).stem.startswith("."):
+        if not Path(dir).stem.startswith('.'):
             collect_files(root / dir, current_depth + 1, config, file_paths)
     del dirs
 
-def merge_filelist(config: dict) -> None:
+def merge_filelist(config: Config) -> None:
     """
     Assumes files are in the current directory or its children.
     """
-    with open(config["file_list"], "r") as file_list:
+    with open(config.file_list, "r") as file_list:
         files_from_list = list(map(lambda line: line.strip(), file_list.readlines()))
-        config["files"].extend(files_from_list)
+        config.files.extend(files_from_list)
 
 def get_ext(path: Path) -> str:
     return "".join(path.suffixes)
@@ -113,3 +124,17 @@ def walk(root, on_error=None, follow_symlinks=False):
 
         yield path, dirnames, filenames
         paths += [path.joinpath(d) for d in reversed(dirnames)]
+
+# TODO: make the returned tuple of iterables instead
+def filter_globs(paths: List[Union[str, Path]]) -> Tuple[List[Path], List[str]]:
+    files: List[Path] = []
+    globs: List[str] = []
+
+    for p_ in paths:
+        p = Path(p_)
+        if p.name.find('*') == -1:
+            files.append(p)
+        else:
+            globs.append(str(p_))
+
+    return (files, globs)

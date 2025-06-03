@@ -1,3 +1,5 @@
+TESTDIR := ".testdir"
+
 build:
 	uv sync --active
 	uv build --wheel --index pypi --out-dir build/
@@ -5,5 +7,5 @@ build:
 check:
 	mypy test.py src/litesort/
 
-test: build
-	uv run test.py
+test testdir=TESTDIR:
+	TESTDIR={{testdir}} pytest --basetemp={{testdir}} test.py

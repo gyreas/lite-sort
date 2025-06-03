@@ -1,14 +1,22 @@
+import os
 import unittest
-import pathlib
 
+from pathlib import Path
 from shutil import rmtree
-from litesort import utils
+from typing import List, Union
 
-TESTDIR = pathlib.Path(".testdir/").absolute()
+from litesort import utils
+from litesort.config import *
+from litesort.argparse import parse_args
+
+td = os.getenv("TESTDIR")
+TESTDIR = Path(".testdir" if td is None else td).absolute()
+TEST_CONFIG = Config()
+
 
 def setUp(argv: list[str]) -> None:
     for f in argv:
-        p = pathlib.Path(f).absolute()
+        p = Path(f).absolute()
         if not p.exists():
             if p.is_dir():
                 p.mkdir(parents=True)
@@ -22,11 +30,11 @@ def setUp(argv: list[str]) -> None:
 
 def tearDown(argv: list[str]) -> None:
     for f in argv:
-        p = pathlib.Path(f)
+        p = Path(f)
         if p.exists():
             if p.is_file():
                 p.unlink()
-                if pathlib.Path(p.parts[0]).is_dir():
+                if Path(p.parts[0]).is_dir():
                     rmtree(p.parts[0])
             else:
                 rmtree(p)
@@ -57,11 +65,80 @@ class TestSetupAndDelete(unittest.TestCase):
 
         # make sure they don't exist
         for f in self.test_files:
-            fp = pathlib.Path(f)
+            fp = Path(f)
             self.assertFalse(fp.exists(), "Cleaned up temp files shouldn't exist")
 
 
-if __name__ == "__main__":
-    TESTDIR.mkdir(parents=True)
-    unittest.main()
-    TESTDIR.rmdir()
+class TestCanClassify(unittest.TestCase):
+    tests = [
+        ("text", ["file1.txt"]),
+    ]
+
+    def test__can_classify(self):
+        pass
+
+
+def touch(basedir: Union[str, Path], paths: List[Union[str, Path]]) -> None:
+    for p_ in paths:
+        p = Path(basedir) / Path(p_)
+        p.touch()
+
+
+class TestGlobCommandline(unittest.TestCase):
+    config = TEST_CONFIG
+    start = TESTDIR / "start_dir"
+    dest = TESTDIR / "dest_dir"
+    argv = [
+        "-s",
+        str(start),
+        "-d",
+        str(dest),
+        "*.txt",
+        "a.txt",
+        "b.txt",
+        "*.py",
+        "a.py",
+        "b.py",
+    ]
+
+    def setUp(self):
+        TestGlobCommandline.start.mkdir(parents=True)
+        TestGlobCommandline.dest.mkdir(parents=True)
+        touch(
+            TestGlobCommandline.start,
+            ["a.py", "b.py", "c.py", "d.py", "a.txt", "b.txt", "c.txt", "d.txt"],
+        )
+
+    def test_do(self):
+        parse_args(TestGlobCommandline.argv, TestGlobCommandline.config)
+
+        assert TestGlobCommandline.config.search_dir == TestGlobCommandline.start
+        assert TestGlobCommandline.config.dest_dir == TestGlobCommandline.dest
+
+        paths_: List[Path] = []
+        utils.collect_files(
+            search_dir=TestGlobCommandline.start,
+            current_depth=1,
+            config=TestGlobCommandline.config,
+            file_paths=paths_,
+        )
+        paths_.sort()
+        paths = list(map(lambda p: p.name, paths_))
+        del paths_
+
+        print(paths)
+
+        assert paths == [
+            "a.py",
+            "a.txt",
+            "b.py",
+            "b.txt",
+            "c.py",
+            "c.txt",
+            "d.py",
+            "d.txt",
+        ]
+
+    def tearDown(self):
+        rmtree(str(TestGlobCommandline.start))
+        rmtree(str(TestGlobCommandline.dest))
