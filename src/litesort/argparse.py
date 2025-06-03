@@ -6,28 +6,31 @@ from .config import *
 def parse_args(argv: list[str], config: Config) -> None:
     parser = argparse.ArgumentParser(
         prog=PROGNAME,
-        description="Collect and sort files in a given directory into directories matching (or relevant to) their filetype.",
+        description="Collect and sort files in a given directory into\
+                     directories matching (or relevant to) their filetype.",
         epilog="",
     )
     parser.add_argument(
         "files",
         metavar="FILES",
-        help="Files to sort. With no files provided, sorts files starting from the current directory and its subdirectories.",
+        help="Files to sort. With no files provided, sorts files starting from\
+              the current directory and its subdirectories",
         nargs="*",
-        type=str,
-    )
-    parser.add_argument(
-        "-s",
-        "--search-dir",
-        metavar="START_DIR",
-        help="search directory, where files to be sorted are searched",
         type=str,
     )
     parser.add_argument(
         "-d",
         "--dest-dir",
         metavar="DEST_DIR",
-        help="destination directory, where files to be sorted are moved to",
+        help="destination directory, where files to be sorted are moved to;\
+              it is created if it doesn't exist",
+        type=str,
+    )
+    parser.add_argument(
+        "-s",
+        "--search-dir",
+        metavar="SEARCH_DIR",
+        help="search directory, where files to be sorted are searched",
         type=str,
     )
     parser.add_argument(
@@ -41,8 +44,8 @@ def parse_args(argv: list[str], config: Config) -> None:
         "-f",
         "--file-list",
         metavar="FILE",
-        help="file containing list of files to be sorted, files in this list will be merged\n\
-              with the [FILES] passed as arguments\n",
+        help="file containing list of files to be sorted, files in this list will be merged\
+              with the [FILES] passed as arguments",
         type=str,
     )
     parser.add_argument(
@@ -84,14 +87,9 @@ def parse_args(argv: list[str], config: Config) -> None:
             exit(1)
     if args.dest_dir:
         dir = Path(args.dest_dir)
-        if dir.exists():
-            config.dest_dir = dir.absolute()
-        else:
-            print(
-                "%s: error: directory '%s' doesn't exist." % (PROGNAME, str(dir)),
-                file=sys.stderr,
-            )
-            exit(1)
+        if not dir.exists():
+            dir.mkdir()
+        config.dest_dir = dir.absolute()
 
     if len(args.files) == 0:
         print("%s: doing nothing since no files were specified.\n" % PROGNAME)

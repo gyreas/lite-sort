@@ -10,7 +10,29 @@ env:
   LATEST_PYVER: "3.13"
   
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "pypy3.10", "3.9", "3.10", "3.11", "3.12", "3.13" ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pipx install uv
+          uv sync --active
+
+      - name: Run tests
+        run: uv run pytest test.py
+
   build:
+    needs: [test]
     runs-on: ubuntu-latest
     strategy:
       matrix:

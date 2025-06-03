@@ -1,3 +1,4 @@
+import random
 import os
 import unittest
 
@@ -84,61 +85,113 @@ def touch(basedir: Union[str, Path], paths: List[Union[str, Path]]) -> None:
         p.touch()
 
 
-class TestGlobCommandline(unittest.TestCase):
+# I thought I needed this for naming clashing reasons in the test environments, but nah
+# I forgot to implement tearDown form nested test case
+def h() -> int:
+    return random.randint((1 << 32) - 1, (1 << 64) - 1)
+
+class TestGlobCommandline_NestedSearchDir(unittest.TestCase):
     config = TEST_CONFIG
     start = TESTDIR / "start_dir"
     dest = TESTDIR / "dest_dir"
-    argv = [
-        "-s",
-        str(start),
-        "-d",
-        str(dest),
-        "*.txt",
-        "a.txt",
-        "b.txt",
-        "*.py",
-        "a.py",
-        "b.py",
-    ]
 
-    def setUp(self):
-        TestGlobCommandline.start.mkdir(parents=True)
-        TestGlobCommandline.dest.mkdir(parents=True)
-        touch(
-            TestGlobCommandline.start,
-            ["a.py", "b.py", "c.py", "d.py", "a.txt", "b.txt", "c.txt", "d.txt"],
-        )
+    def setUp(self) -> None:
+        self.start.mkdir(parents=True, exist_ok=True)
+        self.dest.mkdir(parents=True, exist_ok=True)
+        (self.start / "0" / "1").mkdir(parents=True, exist_ok=True)
+        touch(self.start / "0" / "1", ["tar.xz", "xz.zip"])
 
-    def test_do(self):
-        parse_args(TestGlobCommandline.argv, TestGlobCommandline.config)
+    def runTest(self) -> None:
+        argv = [
+            "-s",
+            str(self.start / "0" / "1"),
+            "-d",
+            str(self.dest / "DEST"),
+            "tar.xz",
+            "xz.zip",
+        ]
+        parse_args(argv, self.config)
 
-        assert TestGlobCommandline.config.search_dir == TestGlobCommandline.start
-        assert TestGlobCommandline.config.dest_dir == TestGlobCommandline.dest
+        print(self.config.search_dir)
+        print(self.config.dest_dir)
+        print(self.config.files)
+
+        self.assertEqual(self.config.search_dir, self.start / "0" / "1")
+        self.assertEqual(self.config.dest_dir, self.dest / "DEST")
 
         paths_: List[Path] = []
         utils.collect_files(
-            search_dir=TestGlobCommandline.start,
+            search_dir=self.start,
             current_depth=1,
-            config=TestGlobCommandline.config,
+            config=self.config,
+            file_paths=paths_,
+        )
+        print(paths_)
+        paths_.sort()
+        paths = list(map(lambda p: p.name, paths_))
+        del paths_
+        self.assertEqual(paths, ["tar.xz", "xz.zip"])
+
+    def tearDown(self) -> None:
+        rmtree(str(self.start))
+        rmtree(str(self.dest))
+
+
+class TestGlobCommandline0(unittest.TestCase):
+    config = TEST_CONFIG
+    start = TESTDIR / "start_dir"
+    dest = TESTDIR / "dest_dir"
+    create: List[Union[str, Path]] = [
+        "a.py",
+        "a.txt",
+        "b.py",
+        "b.txt",
+        "c.py",
+        "c.txt",
+        "d.py",
+        "d.txt",
+    ]
+
+    def setUp(self) -> None:
+        self.start.mkdir(parents=True, exist_ok=True)
+        self.dest.mkdir(parents=True, exist_ok=True)
+        touch(
+            self.start,
+            self.create,
+        )
+
+    def runTest(self) -> None:
+        argv = [
+            "-s",
+            str(self.start),
+            "-d",
+            str(self.dest),
+            "*.txt",
+            "a.txt",
+            "b.txt",
+            "*.py",
+            "a.py",
+            "b.py",
+        ]
+
+        parse_args(argv, self.config)
+
+        assert self.config.search_dir == self.start
+        assert self.config.dest_dir == self.dest
+
+        paths_: List[Path] = []
+        utils.collect_files(
+            search_dir=self.start,
+            current_depth=1,
+            config=self.config,
             file_paths=paths_,
         )
         paths_.sort()
         paths = list(map(lambda p: p.name, paths_))
         del paths_
 
-        print(paths)
+        self.assertEqual(paths, self.create)
 
-        assert paths == [
-            "a.py",
-            "a.txt",
-            "b.py",
-            "b.txt",
-            "c.py",
-            "c.txt",
-            "d.py",
-            "d.txt",
-        ]
-
-    def tearDown(self):
-        rmtree(str(TestGlobCommandline.start))
-        rmtree(str(TestGlobCommandline.dest))
+    def tearDown(self) -> None:
+        rmtree(str(self.start))
+        rmtree(str(self.dest))

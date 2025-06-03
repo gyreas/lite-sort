@@ -6,10 +6,9 @@ from typing import List, Set, Tuple, Union
 from .filetype import FileType
 from .config import Config
 
+
 def categorise_files(
-    config: Config,
-    file_paths: list[Path],
-    files_by_type: dict[FileType, list[Path]]
+    config: Config, file_paths: list[Path], files_by_type: dict[FileType, list[Path]]
 ) -> None:
     # TODO: improve this with the file header especially for files without extension
     # TODO: look into mimetypes
@@ -18,32 +17,65 @@ def categorise_files(
         assert ft != FileType.UNKNOWN, "This is a bug"
         files_by_type[ft].append(f)
 
+
 def categorise_by_filetype(f: Path) -> FileType:
-        ft = FileType.UNKNOWN
-        match get_ext(f):
-            case ".xz" | ".tar" | ".tar.gz" | ".zip" | ".zstd" | ".rar" | ".gz" | ".lzma":
-                ft = FileType.ARCHIVE
-            case ".mp3" | ".wav" | ".ogg" | ".m4a":
-                ft = FileType.AUDIO
-            case ".docx" | ".doc" | ".xls" | ".ppt" | ".pdf" | ".epub" | ".djvu" | ".mobi" | ".odt" | ".xlsx":
-                ft = FileType.DOCUMENT
-            case ".exe" | ".o" | ".so" | ".a":
-                ft = FileType.EXECUTABLE
-            case ".png" | ".svg" | ".jpg" | ".jpeg" | ".ppm" | ".xpm" | ".gif" | ".tiff" | ".raw":
-                ft = FileType.IMAGE
-            case ".iso" | ".data" | ".bin" | ".qcow" | ".qcow2" | ".vdi" | ".vmdk" | ".vhd" | ".hdd":
-                ft = FileType.RAW_DATA
-            case ".mp4" | ".mkv" | ".mov" | ".avi" | ".3gp" | ".webm" | ".m4v":
-                ft = FileType.VIDEO
-            case _:
-                ft = FileType.TEXT
-        return ft
+    ft = FileType.UNKNOWN
+    match get_ext(f):
+        case ".xz" | ".tar" | ".tar.gz" | ".zip" | ".zstd" | ".rar" | ".gz" | ".lzma":
+            ft = FileType.ARCHIVE
+        case ".mp3" | ".wav" | ".ogg" | ".m4a":
+            ft = FileType.AUDIO
+        case (
+            ".docx"
+            | ".doc"
+            | ".xls"
+            | ".ppt"
+            | ".pdf"
+            | ".epub"
+            | ".djvu"
+            | ".mobi"
+            | ".odt"
+            | ".xlsx"
+        ):
+            ft = FileType.DOCUMENT
+        case ".exe" | ".o" | ".so" | ".a":
+            ft = FileType.EXECUTABLE
+        case (
+            ".png"
+            | ".svg"
+            | ".jpg"
+            | ".jpeg"
+            | ".ppm"
+            | ".xpm"
+            | ".gif"
+            | ".tiff"
+            | ".raw"
+        ):
+            ft = FileType.IMAGE
+        case (
+            ".iso"
+            | ".data"
+            | ".bin"
+            | ".qcow"
+            | ".qcow2"
+            | ".vdi"
+            | ".vmdk"
+            | ".vhd"
+            | ".hdd"
+        ):
+            ft = FileType.RAW_DATA
+        case ".mp4" | ".mkv" | ".mov" | ".avi" | ".3gp" | ".webm" | ".m4v":
+            ft = FileType.VIDEO
+        case _:
+            ft = FileType.TEXT
+    return ft
+
 
 def collect_files(
     search_dir: Path,
     current_depth: int,
     config: Config,
-    file_paths: list[Path]
+    file_paths: list[Path],
 ) -> None:
     """
     Walk the path (which is a directory), and collect any files in it into `file_paths`.
@@ -60,29 +92,41 @@ def collect_files(
 
     root, dirs, files = next_
 
+    globbed_set: Set[Path] = set()
+    for g in config.globs:
+        # TODO: remove any directories that actually match
+        globbed_set.update(
+            map(lambda p: Path(isfile_or_die(p).name), Path(root).glob(g))
+        )
+
+    unglobbed_set: Set[Path] = set(
+        map(lambda p: Path(isfile_or_die(root / p).name), files)
+    )
+    unglobbed_set = unglobbed_set.difference(globbed_set)
+
     # combine the matched filepaths with the globs to make it holistic
     fileset: Set[Path] = set(config.files)
-    for g in config.globs:
-        globs = list(Path(root).glob(g))
-        fileset.update(globs)
-        del globs
+    # to avoid double elements/work remove supplied paths that show up in globbed set
+    remaining_set = fileset.difference(globbed_set)
+    # those who didn't show up for the event
+    remaining_matches = remaining_set.intersection(unglobbed_set)
 
-    # collect the (toplevel) regular files here
-    for f in files:
-        fp = root / f
-        assert fp.is_file(), "This is a bug"
-        if fp in fileset:
-            print("found: %s" % str(fp))
-            file_paths.append(fp)
+    file_paths.extend(map(lambda p: root / p, globbed_set))
+    file_paths.extend(map(lambda p: root / p, remaining_matches))
 
-    del files
-    del fileset
+    del files, fileset, globbed_set, unglobbed_set, remaining_matches, remaining_set
 
     # deal with the subdirectories
     for dir in dirs:
-        if not Path(dir).stem.startswith('.'):
+        if not Path(dir).stem.startswith("."):
             collect_files(root / dir, current_depth + 1, config, file_paths)
     del dirs
+
+
+def isfile_or_die(fp: Path) -> Path:
+    assert fp.is_file(), "This is a bug"
+    return fp
+
 
 def merge_filelist(config: Config) -> None:
     """
@@ -92,8 +136,10 @@ def merge_filelist(config: Config) -> None:
         files_from_list = list(map(lambda line: line.strip(), file_list.readlines()))
         config.files.extend(files_from_list)
 
+
 def get_ext(path: Path) -> str:
     return "".join(path.suffixes)
+
 
 def walk(root, on_error=None, follow_symlinks=False):
     """
@@ -125,6 +171,7 @@ def walk(root, on_error=None, follow_symlinks=False):
         yield path, dirnames, filenames
         paths += [path.joinpath(d) for d in reversed(dirnames)]
 
+
 # TODO: make the returned tuple of iterables instead
 def filter_globs(paths: List[Union[str, Path]]) -> Tuple[List[Path], List[str]]:
     files: List[Path] = []
@@ -132,7 +179,7 @@ def filter_globs(paths: List[Union[str, Path]]) -> Tuple[List[Path], List[str]]:
 
     for p_ in paths:
         p = Path(p_)
-        if p.name.find('*') == -1:
+        if p.name.find("*") == -1:
             files.append(p)
         else:
             globs.append(str(p_))

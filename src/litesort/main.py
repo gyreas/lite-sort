@@ -46,6 +46,7 @@ def main(argv: list[str]) -> None:
 def lsort(files_by_type: dict[FT, list[Path]], config: Config):
     dest_dir = config.dest_dir
 
+    print("moving directories" if config.move else "copying directories")
     for ft, files in files_by_type.items():
         file_type = str(ft)
         if len(files) > 0:
@@ -62,7 +63,6 @@ def lsort(files_by_type: dict[FT, list[Path]], config: Config):
                 if config.verbose:
                     print("   %s -> %s" % (str(f), str(dst)))
 
-                print("move:", config.move)
                 if config.move:
                     os.replace(f, dst)
                 else:
